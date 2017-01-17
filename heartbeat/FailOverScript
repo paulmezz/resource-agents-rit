@@ -1,0 +1,168 @@
+#!/bin/sh
+#
+#
+#	FailOverScript OCF RA. Does nothing but wait a few seconds, can be
+#	configured to fail occassionally.
+#
+# Copyright (c) 2004 SUSE LINUX AG, Lars Marowsky-Brée
+#                    All Rights Reserved.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of version 2 of the GNU General Public License as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it would be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# Further, this software is distributed without any warranty that it is
+# free of the rightful claim of any third person regarding infringement
+# or the like.  Any license provided herein, whether implied or
+# otherwise, applies only to this software file.  Patent licenses, if
+# any, provided herein do not apply to combinations of this program with
+# other software, or any other product whatsoever.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write the Free Software Foundation,
+# Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307, USA.
+#
+#######################################################################
+# OCF parameters:
+#   OCF_RESKEY_script_name - The name of the script to run.
+#   OCF_RESKEY_script_args - Arguments to pass into the script if needed.
+#######################################################################
+
+#######################################################################
+# Initialization:
+
+: ${OCF_FUNCTIONS_DIR=${OCF_ROOT}/lib/heartbeat}
+. ${OCF_FUNCTIONS_DIR}/ocf-shellfuncs
+
+#######################################################################
+
+meta_data() {
+	cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="FailOverScript" version="0.9">
+<version>1.0</version>
+
+<longdesc lang="en">
+This is a FailOverScript Resource Agent. It only runs a script at fail
+over time.  One-shot, monitor will always return ok.
+
+</longdesc>
+<shortdesc lang="en">Script run on a failover, one-shot</shortdesc>
+
+<parameters>
+<parameter name="script_name" unique="0" required="1">
+<longdesc lang="en">
+Script to run.
+</longdesc>
+<shortdesc lang="en">Script.</shortdesc>
+<content type="string" default="" />
+</parameter>
+
+<parameter name="script_args" unique="0" required="0">
+<longdesc lang="en">
+Arguments to give it (if needed).  It will always be passed a first
+argument of "start" or "stop".
+</longdesc>
+<shortdesc lang="en">Arugments to pass into the script.</shortdesc>
+<content type="string" default="" />
+</parameter>
+
+</parameters>
+
+<actions>
+<action name="start"        timeout="20" />
+<action name="stop"         timeout="20" />
+<action name="monitor"      timeout="20" interval="10" depth="0" />
+<action name="migrate_to"   timeout="20" />
+<action name="migrate_from" timeout="20" />
+<action name="meta-data"    timeout="5" />
+<action name="validate-all"   timeout="20" />
+</actions>
+</resource-agent>
+END
+}
+
+#######################################################################
+
+SCRIPT_NAME="${OCF_RESKEY_script_name}"
+SCRIPT_ARGS="${OCF_RESKEY_script_args}"
+
+FailOverScript_usage() {
+	cat <<END
+usage: $0 {start|stop|monitor|migrate_to|migrate_from|validate-all|meta-data}
+
+Expects to have a fully populated OCF RA-compliant environment set.
+END
+}
+
+FailOverScript_start() {
+    ${SCRIPT_NAME} start ${SCRIPT_ARGS}
+    ha_pseudo_resource FailOverScript_${OCF_RESOURCE_INSTANCE} start
+    return $OCF_SUCCESS
+#
+    if [ $? =  $OCF_SUCCESS ]; then
+	return $OCF_SUCCESS
+    fi
+    return $OCF_ERR_GENERIC
+}
+
+FailOverScript_stop() {
+    ${SCRIPT_NAME} stop ${SCRIPT_ARGS}
+    ha_pseudo_resource FailOverScript_${OCF_RESOURCE_INSTANCE} stop
+
+    return $OCF_SUCCESS
+#
+    if [ $? =  $OCF_SUCCESS ]; then
+	return $OCF_SUCCESS
+    fi
+    return $OCF_ERR_GENERIC
+}
+
+FailOverScript_monitor() {
+	ha_pseudo_resource FailOverScript_${OCF_RESOURCE_INSTANCE} monitor
+}
+
+FailOverScript_validate() {
+    
+    # Is the script executable.
+    if [ ! -x "${SCRIPT_NAME}" ] ; then
+	return $OCF_ERR_ARGS
+    fi
+
+    return $OCF_SUCCESS
+}
+
+##: ${OCF_RESKEY_state=${HA_RSCTMP}/FailOverScript-${OCF_RESOURCE_INSTANCE}.state}
+##: ${OCF_RESKEY_fake="FailOverScript"}
+
+
+case $__OCF_ACTION in
+meta-data)	meta_data
+		exit $OCF_SUCCESS
+		;;
+start)		FailOverScript_start;;
+stop)		FailOverScript_stop;;
+monitor)	FailOverScript_monitor;;
+migrate_to)	ocf_log info "Migrating ${OCF_RESOURCE_INSTANCE} to ${OCF_RESKEY_CRM_meta_migrate_target}."
+	        FailOverScript_stop
+		;;
+migrate_from)	ocf_log info "Migrating ${OCF_RESOURCE_INSTANCE} from ${OCF_RESKEY_CRM_meta_migrate_source}."
+	        FailOverScript_start
+		;;
+validate-all)	FailOverScript_validate;;
+usage|help)	FailOverScript_usage
+		exit $OCF_SUCCESS
+		;;
+*)		FailOverScript_usage
+		exit $OCF_ERR_UNIMPLEMENTED
+		;;
+esac
+rc=$?
+ocf_log debug "${OCF_RESOURCE_INSTANCE} $__OCF_ACTION : $rc"
+exit $rc
+
