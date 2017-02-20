@@ -96,6 +96,7 @@ END
 
 EnableLocksActivateLV_start() {
     vgchange --lock-start 
+    sleep 3
     vgchange -a y  ${VG_NAME}
     ha_pseudo_resource EnableLocksActivateLV_${OCF_RESOURCE_INSTANCE} start
 
