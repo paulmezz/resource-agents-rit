@@ -5,7 +5,7 @@
 #	This fires off a vgchange --lock-start and an
 #	vgchange -a y VG
 #
-# Based off of the EnableLocksActivateLV mod by Eric Meddaugh at RIT (which
+# Based off of a RA to fire off a script by Eric Meddaugh at RIT (which
 # was based off of the "Dummy" resource agent
 #
 # This program is free software; you can redistribute it and/or modify
