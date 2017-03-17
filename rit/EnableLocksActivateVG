@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 #
-#	EnableLocksActivateLV OCF RA. 
+#	EnableLocksActivateVG OCF RA. 
 #	This fires off a vgchange --lock-start and an
 #	vgchange -a y VG
 #
@@ -45,18 +45,18 @@ meta_data() {
 	cat <<END
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-<resource-agent name="EnableLocksActivateLV" version="0.9">
+<resource-agent name="EnableLocksActivateVG" version="0.9">
 <version>1.0</version>
 
 <longdesc lang="en">
-This is the EnableLocksActivateLV Resource Agent. It fires off a 
+This is the EnableLocksActivateVG Resource Agent. It fires off a 
 'vgchange --lock-[start,stop]' followed by a 'vgchange -a y VG'
 
 This exists because apparently lvmlockd is too new for pacemaker to have
 all the hooks in correctly.  
 
 </longdesc>
-<shortdesc lang="en">Start or stop LVM VG locking from EnableLocksActivateLV </shortdesc>
+<shortdesc lang="en">Start or stop LVM VG locking from EnableLocksActivateVG </shortdesc>
 
 <parameters>
 <parameter name="VG_to_work_on" unique="0" required="1">
@@ -86,7 +86,7 @@ END
 
 VG_NAME="${OCF_RESKEY_VG_to_work_on}"
 
-EnableLocksActivateLV_usage() {
+EnableLocksActivateVG_usage() {
 	cat <<END
 usage: $0 {start|stop|monitor|migrate_to|migrate_from|validate-all|meta-data}
 
@@ -94,11 +94,11 @@ Expects to have a fully populated OCF RA-compliant environment set.
 END
 }
 
-EnableLocksActivateLV_start() {
-    vgchange --lock-start 
+EnableLocksActivateVG_start() {
+    vgchange --lock-start ${VG_NAME}
     sleep 3
     vgchange -a y  ${VG_NAME}
-    ha_pseudo_resource EnableLocksActivateLV_${OCF_RESOURCE_INSTANCE} start
+    ha_pseudo_resource EnableLocksActivateVG_${OCF_RESOURCE_INSTANCE} start
 
     if [ $? =  $OCF_SUCCESS ]; then
 	return $OCF_SUCCESS
@@ -106,10 +106,10 @@ EnableLocksActivateLV_start() {
     return $OCF_ERR_GENERIC
 }
 
-EnableLocksActivateLV_stop() {
+EnableLocksActivateVG_stop() {
     vgchange -a n ${VG_NAME}
     vgchange --lock-stop
-    ha_pseudo_resource EnableLocksActivateLV_${OCF_RESOURCE_INSTANCE} stop
+    ha_pseudo_resource EnableLocksActivateVG_${OCF_RESOURCE_INSTANCE} stop
 
     if [ $? =  $OCF_SUCCESS ]; then
 	return $OCF_SUCCESS
@@ -117,39 +117,39 @@ EnableLocksActivateLV_stop() {
     return $OCF_ERR_GENERIC
 }
 
-EnableLocksActivateLV_monitor() {
-	ha_pseudo_resource EnableLocksActivateLV_${OCF_RESOURCE_INSTANCE} monitor
+EnableLocksActivateVG_monitor() {
+	ha_pseudo_resource EnableLocksActivateVG_${OCF_RESOURCE_INSTANCE} monitor
 }
 
-EnableLocksActivateLV_validate() {
+EnableLocksActivateVG_validate() {
     
-    # Assume vgchange exists and EnableLocksActivateLV is running
+    # Assume vgchange exists and EnableLocksActivateVG is running
 
     return $OCF_SUCCESS
 }
 
-##: ${OCF_RESKEY_state=${HA_RSCTMP}/EnableLocksActivateLV-${OCF_RESOURCE_INSTANCE}.state}
-##: ${OCF_RESKEY_fake="EnableLocksActivateLV"}
+##: ${OCF_RESKEY_state=${HA_RSCTMP}/EnableLocksActivateVG-${OCF_RESOURCE_INSTANCE}.state}
+##: ${OCF_RESKEY_fake="EnableLocksActivateVG"}
 
 
 case $__OCF_ACTION in
 meta-data)	meta_data
 		exit $OCF_SUCCESS
 		;;
-start)		EnableLocksActivateLV_start;;
-stop)		EnableLocksActivateLV_stop;;
-monitor)	EnableLocksActivateLV_monitor;;
+start)		EnableLocksActivateVG_start;;
+stop)		EnableLocksActivateVG_stop;;
+monitor)	EnableLocksActivateVG_monitor;;
 migrate_to)	ocf_log info "Migrating ${OCF_RESOURCE_INSTANCE} to ${OCF_RESKEY_CRM_meta_migrate_target}."
-	        EnableLocksActivateLV_stop
+	        EnableLocksActivateVG_stop
 		;;
 migrate_from)	ocf_log info "Migrating ${OCF_RESOURCE_INSTANCE} from ${OCF_RESKEY_CRM_meta_migrate_source}."
-	        EnableLocksActivateLV_start
+	        EnableLocksActivateVG_start
 		;;
-validate-all)	EnableLocksActivateLV_validate;;
-usage|help)	EnableLocksActivateLV_usage
+validate-all)	EnableLocksActivateVG_validate;;
+usage|help)	EnableLocksActivateVG_usage
 		exit $OCF_SUCCESS
 		;;
-*)		EnableLocksActivateLV_usage
+*)		EnableLocksActivateVG_usage
 		exit $OCF_ERR_UNIMPLEMENTED
 		;;
 esac
