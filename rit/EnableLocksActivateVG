@@ -8,6 +8,9 @@
 # Based off of a RA to fire off a script by Eric Meddaugh at RIT (which
 # was based off of the "Dummy" resource agent
 #
+# I'm making some assumptions that various programs are already in the 
+# path. (vgchange, lvmlockctl etc)
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of version 2 of the GNU General Public License as
 # published by the Free Software Foundation.
@@ -96,34 +99,47 @@ END
 
 EnableLocksActivateVG_start() {
     vgchange --lock-start ${VG_NAME}
+    #Chasing a weird issue where the locks aren't ready yet, adding a sleep as a test
     sleep 3
     vgchange -a y  ${VG_NAME}
-    ha_pseudo_resource EnableLocksActivateVG_${OCF_RESOURCE_INSTANCE} start
 
-    if [ $? =  $OCF_SUCCESS ]; then
+    if EnableLocksActivateVG_status ${VG_NAME} ; then
 	return $OCF_SUCCESS
+    else
+	ocf_exit_reason "EnableLocksActivateVG: failed to start lock on volume group ${VG_NAME}"
+	return $OCF_NOT_RUNNING
     fi
-    return $OCF_ERR_GENERIC
+    
 }
 
 EnableLocksActivateVG_stop() {
     vgchange -a n ${VG_NAME}
     vgchange --lock-stop
-    ha_pseudo_resource EnableLocksActivateVG_${OCF_RESOURCE_INSTANCE} stop
 
-    if [ $? =  $OCF_SUCCESS ]; then
-	return $OCF_SUCCESS
+    if EnableLocksActivateVG_status ${VG_NAME} ; then
+	ocf_exit_reason "EnableLocksActivateVG: failed to stop lock on volume group ${VG_NAME}"
+        return $OCF_ERR_GENERIC
+    else
+        return $OCF_SUCCESS
     fi
-    return $OCF_ERR_GENERIC
+
+
 }
 
-EnableLocksActivateVG_monitor() {
-	ha_pseudo_resource EnableLocksActivateVG_${OCF_RESOURCE_INSTANCE} monitor
+EnableLocksActivateVG_status() {
+	if [ -z  "`lvmlockctl -i | grep \"VG ${VG_NAME}\"`" ] ; then
+		#We didnt' find a lock for the VG or it's otherwise broken
+		return 7
+	else
+		#We found a lock for the VG
+		return 0
+	fi
 }
 
 EnableLocksActivateVG_validate() {
     
     # Assume vgchange exists and EnableLocksActivateVG is running
+    #  Eventually test for lvmetad enabled, lvmlockd enabled and binaries exist
 
     return $OCF_SUCCESS
 }
@@ -136,9 +152,15 @@ case $__OCF_ACTION in
 meta-data)	meta_data
 		exit $OCF_SUCCESS
 		;;
-start)		EnableLocksActivateVG_start;;
-stop)		EnableLocksActivateVG_stop;;
-monitor)	EnableLocksActivateVG_monitor;;
+start)		EnableLocksActivateVG_start
+		exit $?;;
+	
+stop)		EnableLocksActivateVG_stop
+		exit $?;;
+
+monitor)	EnableLocksActivateVG_status
+		exit $?;;
+
 migrate_to)	ocf_log info "Migrating ${OCF_RESOURCE_INSTANCE} to ${OCF_RESKEY_CRM_meta_migrate_target}."
 	        EnableLocksActivateVG_stop
 		;;
