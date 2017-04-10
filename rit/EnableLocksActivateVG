@@ -114,7 +114,7 @@ EnableLocksActivateVG_start() {
 
 EnableLocksActivateVG_stop() {
     vgchange -a n ${VG_NAME}
-    vgchange --lock-stop
+    vgchange --lock-stop ${VG_NAME}
 
     if EnableLocksActivateVG_status ${VG_NAME} ; then
 	ocf_exit_reason "EnableLocksActivateVG: failed to stop lock on volume group ${VG_NAME}"
