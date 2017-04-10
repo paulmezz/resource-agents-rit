@@ -127,12 +127,12 @@ EnableLocksActivateVG_stop() {
 }
 
 EnableLocksActivateVG_status() {
-	if [ -z  "`lvmlockctl -i | grep \"VG ${VG_NAME}\"`" ] ; then
-		#We didnt' find a lock for the VG or it's otherwise broken
-		return 7
-	else
+	if [ "`lvmlockctl -i | grep \"^VG ${VG_NAME} \"`" ] ; then
 		#We found a lock for the VG
 		return 0
+	else
+		#We didnt' find a lock for the VG or it's otherwise broken
+		return 7
 	fi
 }
 
