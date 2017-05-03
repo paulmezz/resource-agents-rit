@@ -129,7 +129,9 @@ EnableLocksActivateVG_stop() {
 }
 
 EnableLocksActivateVG_status() {
-	if [ "`lvmlockctl -i | grep \"^VG ${VG_NAME} \"`" ] ; then
+	#The original check would fail out every now and then with no real reason.  Seeing if the /sys method is more robust
+	#if [ "`lvmlockctl -i | grep \"^VG ${VG_NAME} \"`" ] ; then
+	if [ -e "/sys/kernel/debug/dlm/lvm_${VG_NAME}" ] ; then
 		#echo ${VG_NAME} lock success - Begin Dump | logger --tag $HOSTNAME-lockstatus-DEBUG --server thecloud.main.ad.rit.edu -P 9001
 		#lvmlockctl -i | logger --tag $HOSTNAME-lockstatus-DEBUG --server thecloud.main.ad.rit.edu -P 9001
 		#echo ${VG_NAME} lock success - End Dump | logger --tag $HOSTNAME-lockstatus-DEBUG --server thecloud.main.ad.rit.edu -P 9001
