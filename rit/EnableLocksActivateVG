@@ -130,9 +130,9 @@ EnableLocksActivateVG_stop() {
 
 EnableLocksActivateVG_status() {
 	if [ "`lvmlockctl -i | grep \"^VG ${VG_NAME} \"`" ] ; then
-		echo ${VG_NAME} lock success - Begin Dump | logger --tag $HOSTNAME-lockstatus-DEBUG --server thecloud.main.ad.rit.edu -P 9001
-		lvmlockctl -i | logger --tag $HOSTNAME-lockstatus-DEBUG --server thecloud.main.ad.rit.edu -P 9001
-		echo ${VG_NAME} lock success - End Dump | logger --tag $HOSTNAME-lockstatus-DEBUG --server thecloud.main.ad.rit.edu -P 9001
+		#echo ${VG_NAME} lock success - Begin Dump | logger --tag $HOSTNAME-lockstatus-DEBUG --server thecloud.main.ad.rit.edu -P 9001
+		#lvmlockctl -i | logger --tag $HOSTNAME-lockstatus-DEBUG --server thecloud.main.ad.rit.edu -P 9001
+		#echo ${VG_NAME} lock success - End Dump | logger --tag $HOSTNAME-lockstatus-DEBUG --server thecloud.main.ad.rit.edu -P 9001
 		
 		#We found a lock for the VG
 		return 0
