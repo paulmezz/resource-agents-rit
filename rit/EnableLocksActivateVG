@@ -98,9 +98,9 @@ END
 }
 
 EnableLocksActivateVG_start() {
+    echo vgchange --lock-start ${VG_NAME} | logger --tag $HOSTNAME-lockstart-DEBUG --server thecloud.main.ad.rit.edu -P 9001
     vgchange --lock-start ${VG_NAME}
-    #Chasing a weird issue where the locks aren't ready yet, adding a sleep as a test
-    sleep 3
+    echo vgchange -a y  ${VG_NAME} | logger --tag $HOSTNAME-lockstart-DEBUG --server thecloud.main.ad.rit.edu -P 9001
     vgchange -a y  ${VG_NAME}
 
     if EnableLocksActivateVG_status ${VG_NAME} ; then
@@ -113,7 +113,9 @@ EnableLocksActivateVG_start() {
 }
 
 EnableLocksActivateVG_stop() {
+    echo vgchange -a n ${VG_NAME} | logger --tag $HOSTNAME-lockstop-DEBUG --server thecloud.main.ad.rit.edu -P 9001
     vgchange -a n ${VG_NAME}
+    echo vgchange --lock-stop ${VG_NAME} | logger --tag $HOSTNAME-lockstop-DEBUG --server thecloud.main.ad.rit.edu -P 9001
     vgchange --lock-stop ${VG_NAME}
 
     if EnableLocksActivateVG_status ${VG_NAME} ; then
@@ -128,9 +130,17 @@ EnableLocksActivateVG_stop() {
 
 EnableLocksActivateVG_status() {
 	if [ "`lvmlockctl -i | grep \"^VG ${VG_NAME} \"`" ] ; then
+		echo ${VG_NAME} lock success - Begin Dump | logger --tag $HOSTNAME-lockstatus-DEBUG --server thecloud.main.ad.rit.edu -P 9001
+		lvmlockctl -i | logger --tag $HOSTNAME-lockstatus-DEBUG --server thecloud.main.ad.rit.edu -P 9001
+		echo ${VG_NAME} lock success - End Dump | logger --tag $HOSTNAME-lockstatus-DEBUG --server thecloud.main.ad.rit.edu -P 9001
+		
 		#We found a lock for the VG
 		return 0
 	else
+		echo ${VG_NAME} lock fail - Begin Dump | logger --tag $HOSTNAME-lockstatus-DEBUG --server thecloud.main.ad.rit.edu -P 9001
+		lvmlockctl -i | logger --tag $HOSTNAME-lockstatus-DEBUG --server thecloud.main.ad.rit.edu -P 9001
+		echo ${VG_NAME} lock fail - End Dump | logger --tag $HOSTNAME-lockstatus-DEBUG --server thecloud.main.ad.rit.edu -P 9001
+
 		#We didnt' find a lock for the VG or it's otherwise broken
 		return 7
 	fi
@@ -140,7 +150,7 @@ EnableLocksActivateVG_validate() {
     
     # Assume vgchange exists and EnableLocksActivateVG is running
     #  Eventually test for lvmetad enabled, lvmlockd enabled and binaries exist
-
+	echo "Validate called.. I dunno" | logger --tag $HOSTNAME-lockvalidate-DEBUG --server thecloud.main.ad.rit.edu -P 9001
     return $OCF_SUCCESS
 }
 
