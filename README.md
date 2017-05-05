@@ -30,4 +30,6 @@ Initially this was based off a one-shot script used internaly.  It didn't need
 any checks so it didn't have any.  Since I'm actually making this 'real' it 
 needs all the checks filled out correctly.
 
+The biggest thing I have left besides making the existing checks more portable
+and robust is to figure out the best way to determine if a lock already exists.
 
