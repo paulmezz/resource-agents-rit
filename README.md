@@ -15,9 +15,15 @@ Make a shared volume group on your shared block device (we are using ceph).
 Activate the VG
 Use the VG.
 
-I'm actively working on figuring out the best way to make all this work.
-Follow my directions with the knowledge that I have no idea what I'm doing.....
-yet
+There are a bunch of 'logger' commands jammed into this resource agent right now
+so I can track down an issue where the locks exist, but the check fails.  It
+appears that lvmlockctl does NOT always work.  This is a BadThing(tm) when
+dealing with pacemaker.  I switched to the much more dirty feeling
+/sys/kernel/debug/dlm method and it has been rock solid.  This does require
+debugfs to be either in the kernel or loaded as a module.  No guarantees
+on how portable this check is.  I need to find a better check for this.
+
+Follow my directions with the knowledge that I am still figuring this out myself
 
 # ToDo:
 Initially this was based off a one-shot script used internaly.  It didn't need 
